@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\DepartmentController;
    // تأكد من استيراد الـ AuthController
 /*
@@ -47,4 +48,23 @@ Route::middleware('auth:sanctum')->prefix('departments')->group(function () {
     Route::put('{department}', [DepartmentController::class, 'update']);
     Route::delete('{department}', [DepartmentController::class, 'destroy']);
 });
+// course controller
+Route::middleware('auth:sanctum')->prefix('course')->group(function () {
+    Route::get('/', [CourseController::class, 'index']);
+    Route::get('{course}', [CourseController::class,'show']);
+    Route::post('/', [CourseController::class, 'store']);
+    Route::put('{course}', [CourseController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('{course}', [CourseController::class, 'destroy']);
+});
 
+
+// course request controller
+
+
+Route::middleware('auth:sanctum')->prefix('course-request')->group(function () {
+    Route::get('/', [CourseRequestController::class,'index']);
+    Route::get('{course_request}', [CourseRequestController::class,'show']);
+    Route::post('/', [CourseRequestController::class,'store']);
+    Route::put('{course_request}', [CourseRequestController::class,'update']);
+    Route::delete('{course_request}', [CourseRequestController::class,'destroy']);
+});

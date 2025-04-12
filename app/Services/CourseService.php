@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Course;
@@ -14,6 +15,7 @@ class CourseService
      */
     public function createCourse(Request $request): Course
     {
+        // عملية إنشاء الدورة
         return Course::create([
             'name' => $request->name,
             'description' => $request->description,
@@ -34,12 +36,17 @@ class CourseService
      */
     public function updateCourse(Request $request, int $id): ?Course
     {
+        // التأكد من أن $id هو عدد صحيح
+        $id = (int) $id;
+
+        // العثور على الدورة
         $course = Course::find($id);
 
         if (!$course) {
             return null;  // الدورة غير موجودة
         }
 
+        // تحديث الدورة
         $course->update($request->only([
             'name', 'description', 'start_date', 'end_date', 'location', 'instructor', 'available'
         ]));
@@ -55,12 +62,17 @@ class CourseService
      */
     public function deleteCourse(int $id): bool
     {
+        // التأكد من أن $id هو عدد صحيح
+        $id = (int) $id;
+
+        // العثور على الدورة
         $course = Course::find($id);
 
         if (!$course) {
             return false;  // الدورة غير موجودة
         }
 
+        // حذف الدورة
         $course->delete();
 
         return true;
@@ -82,8 +94,11 @@ class CourseService
      * @param  int  $id
      * @return \App\Models\Course|null
      */
-    public function getCourseById(int $id): ?Course
+    public function getCourseById(int|string $id): ?Course
     {
+        // التأكد من أن $id هو عدد صحيح
+        $id = (int) $id;
+
         return Course::find($id);
     }
 }
