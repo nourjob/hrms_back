@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\DepartmentController;
+use App\Http\Controllers\Api\AttachmentController;
    // تأكد من استيراد الـ AuthController
 /*
 |--------------------------------------------------------------------------
@@ -40,7 +41,16 @@ Route::middleware('auth:sanctum')->prefix('users')->group(function () {
     Route::post('/', [UserController::class, 'store']);
     Route::put('{user}', [UserController::class, 'update']);
     Route::delete('{user}', [UserController::class, 'destroy']);
+
 });
+// routes/api.php
+
+// Route لتعديل البيانات العامة (يحق للـ Admin و HR فقط)
+Route::middleware('auth:sanctum')->put('/users/{user}/update', [UserController::class, 'updateEmployeeData']);
+
+// Route لتعديل البيانات الشخصية (يحق للموظف فقط)
+Route::middleware('auth:sanctum')->put('/user/update', [UserController::class, 'updatePersonalData']);
+
 Route::middleware('auth:sanctum')->prefix('departments')->group(function () {
     Route::get('/', [DepartmentController::class, 'index']);
     Route::get('{department}', [DepartmentController::class, 'show']);
@@ -68,3 +78,12 @@ Route::middleware('auth:sanctum')->prefix('course-request')->group(function () {
     Route::put('{course_request}', [CourseRequestController::class,'update']);
     Route::delete('{course_request}', [CourseRequestController::class,'destroy']);
 });
+// routes/api.php
+
+
+
+// إضافة مرفق للطلب
+Route::middleware('auth:sanctum')->post('/attachments/{requestId}/{type}', [AttachmentController::class, 'store']);
+
+// حذف مرفق
+Route::middleware('auth:sanctum')->delete('/attachments/{attachment}', [AttachmentController::class, 'destroy']);

@@ -1,12 +1,12 @@
 <?php
+// database/seeders/UserSeeder.php
 
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
-use Spatie\Permission\Models\Role;  // إضافة هذا السطر لاستيراد Role من مكتبة Spatie
-use App\Models\Department;
+use Spatie\Permission\Models\Role;
 
 class UserSeeder extends Seeder
 {

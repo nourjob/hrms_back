@@ -32,6 +32,9 @@ class User extends Authenticatable
         'address',
         'university',
         'graduation_year',
+         'survey_completed',
+          'salary_details',
+           'status_details',
     ];
 
     /**
@@ -59,10 +62,23 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Department::class);
     }
-
-    public function requests()
+    public function manager()
     {
-        return $this->hasMany(UserRequest::class);
+        // علاقة `manager` تشير إلى `User` آخر في نفس الجدول
+        return $this->belongsTo(User::class, 'manager_id');  // استخدام `manager_id` للربط
+    }
+
+    public function leaveRequests()
+    {
+        return $this->hasMany(LeaveRequest::class, 'user_id');  // ربط الطلبات بالإجازة
+    }
+
+    /**
+     * علاقة المستخدم بطلبات البيان (بيان الوضع وبيان الراتب).
+     */
+    public function statementRequests()
+    {
+        return $this->hasMany(StatementRequest::class, 'user_id');  // ربط الطلبات بالبيان المالي
     }
 
     public function courseRequests()
@@ -70,10 +86,6 @@ class User extends Authenticatable
         return $this->hasMany(CourseRequest::class);
     }
 
-    public function personalUpdates()
-    {
-        return $this->hasMany(PersonalUpdate::class); 
-    }
 
     public function surveyResponses()
     {

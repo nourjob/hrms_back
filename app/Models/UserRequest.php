@@ -18,6 +18,7 @@ class UserRequest extends Model
         'end_date',
         'reason',
         'status',
+          'salary_details', 'status_details'
     ];
 
     /**

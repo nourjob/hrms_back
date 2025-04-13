@@ -21,8 +21,14 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'job_number' => $this->job_number,
             'status' => $this->status,
-            'department' => $this->department ? $this->department->name : null,  // تحقق من وجود department
-            'manager' => $this->manager ? $this->manager->name : null,  // تحقق من وجود manager
+
+            // تأكد من عرض اسم القسم إذا كان موجودًا
+            'department' => $this->department ? $this->department->name : null,  // عرض اسم القسم فقط إذا كان موجودًا
+
+            // تأكد من عرض اسم المدير إذا كان موجودًا
+            'manager' => $this->manager ? $this->manager->name : null,  // إضافة هذا السطر
+            'role' => $this->getRoleNames(),  // إرجاع جميع الأدوار المخصصة لهذا المستخدم
+
             'marital_status' => $this->marital_status,
             'number_of_children' => $this->number_of_children,
             'qualification' => $this->qualification,

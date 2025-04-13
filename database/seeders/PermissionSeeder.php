@@ -1,4 +1,5 @@
 <?php
+// database/seeders/PermissionSeeder.php
 
 namespace Database\Seeders;
 
@@ -71,6 +72,13 @@ class PermissionSeeder extends Seeder
             'manage roles',
             'assign roles',
             'view audit logs',
+
+            // ✅ الصلاحيات الجديدة:
+            // 1. **تعديل بيانات الموظف العامة** - يحق لـ Admin و HR
+            'update employee data',
+
+            // 2. **تعديل بيانات الموظف الشخصية** - يحق للموظف تعديل هذه البيانات فقط
+            'update personal data',
         ];
 
         // إنشاء الصلاحيات إن لم تكن موجودة
@@ -98,6 +106,7 @@ class PermissionSeeder extends Seeder
             'view courses', 'approve course request', 'reject course request',
             'create surveys', 'view surveys', 'view survey results',
             'view departments', 'create departments',
+            'update employee data',  // تعديل بيانات الموظف العامة
         ]);
 
         // منح صلاحيات لـ manager
@@ -115,7 +124,9 @@ class PermissionSeeder extends Seeder
             'create requests', 'edit own requests', 'delete own requests', 'view requests',
             'request leave', 'request statement', 'upload leave proof',
             'view courses', 'request course',
-            'update personal info', 'upload attachments',
+            'update personal data', // تعديل البيانات الشخصية
+            'update personal info', // التحديثات الشخصية
+            'upload attachments',
             'view surveys', 'submit survey',
         ]);
     }

@@ -29,7 +29,11 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->string('university')->nullable();       // العنوان
             $table->string('graduation_year')->nullable();
+            $table->text('salary_details')->nullable();       // تفاصيل بيان الراتب
+            $table->text('status_details')->nullable();       // تفاصيل بيان الوضع
 
+            // حقل لتتبع الاستبيانات
+            $table->boolean('survey_completed')->default(false);  // لتتبع إتمام الاستبيان
             $table->rememberToken();
             $table->timestamps();
         });

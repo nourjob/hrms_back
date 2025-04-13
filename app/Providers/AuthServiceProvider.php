@@ -10,6 +10,8 @@ use App\Models\Course;
 use App\Policies\UserPolicy;
 use App\Policies\DepartmentPolicy;
 use App\Policies\CoursePolicy;
+use App\Policies\RequestPolicy;
+use App\Models\UserRequest;
 class AuthServiceProvider extends ServiceProvider
 {
     /**
@@ -23,6 +25,7 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         Course::class => CoursePolicy::class,
         Department::class => DepartmentPolicy::class,
+        Request::class => RequestPolicy::class,
 
 
     ];

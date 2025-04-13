@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
              // استدعاء PermissionSeeder
              PermissionSeeder::class,
              UserSeeder::class,
-
+             DepartmentSeeder::class,
                  // استدعاء UserSeeder
         ]);
     }

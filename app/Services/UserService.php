@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Services;
 
 use App\Models\User;
@@ -22,15 +21,6 @@ class UserService
                 'role' => 'HR cannot be assigned as Admin.',
             ]);
         }
-
-        // تحقق إذا كان المستخدم لديه دور بالفعل
-        // if ($data['role'] && User::whereHas('roles', function ($query) use ($data) {
-        //     $query->where('name', $data['role']);
-        // })->exists()) {
-        //     throw ValidationException::withMessages([
-        //         'role' => 'The user already has this role assigned.',
-        //     ]);
-        // }
 
         // إنشاء المستخدم
         $user = User::create([
@@ -57,14 +47,29 @@ class UserService
     }
 
     /**
-     * تحديث بيانات المستخدم.
+     * تحديث بيانات المستخدم العامة.
      *
      * @param  \App\Models\User  $user
      * @param  array  $data
      * @return \App\Models\User
      */
-    public function updateUser(User $user, array $data)
+    public function updateEmployeeData(User $user, array $data)
     {
+        // تحديث البيانات العامة للمستخدم
+        $user->update($data);
+        return $user;
+    }
+
+    /**
+     * تحديث البيانات الشخصية للمستخدم.
+     *
+     * @param  \App\Models\User  $user
+     * @param  array  $data
+     * @return \App\Models\User
+     */
+    public function updatePersonalData(User $user, array $data)
+    {
+        // تحديث البيانات الشخصية فقط مثل المؤهل العلمي، الحالة الاجتماعية، العنوان
         $user->update($data);
         return $user;
     }

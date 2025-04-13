@@ -11,12 +11,11 @@ return new class extends Migration
             $table->id();
             $table->morphs('approvable');
             $table->foreignId('approved_by')->constrained('users')->onDelete('cascade');
-            $table->string('role'); // بدون after
 
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->text('comment')->nullable();
             $table->timestamps(); // إضافة الأعمدة created_at و updated_at
-        }); 
+        });
     }
 
     public function down(): void

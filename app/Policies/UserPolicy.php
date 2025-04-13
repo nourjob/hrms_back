@@ -7,6 +7,14 @@ use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
+
+    public function updateProfile(User $user, User $model): bool
+    {
+        // يسمح فقط لـ Admin و HR و الموظف نفسه بتعديل بياناته الشخصية
+        return $user->hasRole('admin') || $user->hasRole('hr') || $user->id === $model->id;
+    }
+
+
     /**
      * تحديد ما إذا كان المستخدم يمكنه عرض أي من النماذج.
      */
