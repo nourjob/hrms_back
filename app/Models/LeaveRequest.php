@@ -30,7 +30,7 @@ class LeaveRequest extends Model
      */
     public function attachments()
     {
-        return $this->morphMany(Attachment::class, 'attachable');  // ربط الطلب بالمرفقات
+        return $this->morphMany(Attachment::class, 'attachable');
     }
 
     /**

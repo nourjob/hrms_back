@@ -8,9 +8,11 @@ use App\Services\AttachmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Routing\Controller;
+use App\Models\Attachment;
 
 class AttachmentController extends Controller
 {
+    
     protected $attachmentService;
 
     public function __construct(AttachmentService $attachmentService)

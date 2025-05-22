@@ -2,7 +2,6 @@
 // database/seeders/DepartmentSeeder.php
 // database/seeders/DepartmentSeeder.php
 // database/seeders/DepartmentSeeder.php
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -23,15 +22,11 @@ class DepartmentSeeder extends Seeder
 
         // إنشاء الأقسام
         foreach ($departments as $data) {
-            $department = Department::firstOrCreate(['name' => $data['name']]);
-
-            // تعيين مدير القسم (من الذين لديهم دور "manager" باستخدام Spatie)
-            $manager = User::role('manager')->first();  // استخدام Spatie للبحث عن المدير
-
-            if ($manager) {
-                $department->manager_id = $manager->id;  // تعيين المدير للقسم
-                $department->save();
-            }
+            // إنشاء القسم مع تعيين `manager_id` كـ null
+            $department = Department::firstOrCreate([
+                'name' => $data['name'],
+                'manager_id' => null,  // تعيين `manager_id` كـ null
+            ]);
         }
     }
 }

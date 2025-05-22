@@ -2,29 +2,49 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Course;
+use App\Models\User;
 
 class CoursePolicy
-{
-    public function view(User $user): bool
-{
-    return $user->hasRole(['admin', 'hr']);
-}
+{   
+    /**
+     * عرض كل الدورات
+     */
+    public function viewAny(User $user): bool
+    {
+        return $user->hasPermissionTo('view courses');
+    }
 
-public function create(User $user): bool
-{
-    return $user->hasRole(['admin', 'hr']);
-}
+    /**
+     * عرض دورة واحدة
+     */
+    public function view(User $user, Course $course): bool
+    {
+        return $user->hasPermissionTo('view courses')
+                || $user->hasRole('hr') ||$user->hasRole('admin') || $user->id === $course->user_id;  ;
+    }
 
-public function update(User $user): bool
-{
-    return $user->hasRole(['admin', 'hr']);
-}
+    /**
+     * إنشاء دورة جديدة
+     */
+    public function create(User $user): bool
+    {
+        return $user->hasPermissionTo('create course');
+    }
 
-public function delete(User $user): bool
-{
-    return $user->hasRole('admin');
+    /**
+     * تعديل دورة
+     */
+    public function update(User $user, Course $course): bool
+    {
+        return $user->hasPermissionTo('update course');
+    }
 
-}
+    /**
+     * حذف دورة
+     */
+    public function delete(User $user, Course $course): bool
+    {
+        return $user->hasPermissionTo('delete course');
+    }
 }

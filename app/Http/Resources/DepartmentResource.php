@@ -17,6 +17,7 @@ class DepartmentResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'manager_id' => $this->manager_id,
             'manager' => $this->manager ? $this->manager->name : null,  // اسم المدير
             'created_at' => $this->created_at->toDateString(),
             'updated_at' => $this->updated_at->toDateString(),

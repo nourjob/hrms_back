@@ -1,133 +1,153 @@
 <?php
-// database/seeders/PermissionSeeder.php
 
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;  // استيراد Role من مكتبة Spatie
-use Spatie\Permission\Models\Permission;  // استيراد Permission من مكتبة Spatie
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
 class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // قائمة الصلاحيات
         $permissions = [
             // 👤 المستخدمين
-            'view users',
-            'create users',
-            'edit users',
-            'delete users',
+            'view users', 'create users', 'edit users', 'delete users',
 
-            // 📄 الطلبات (إجازات + بيانات)
-            'view requests',
-            'create requests',
-            'edit own requests',
-            'delete own requests',
-            'approve requests',
-            'reject requests',
+            // 📄 الطلبات (إجازات)
+            'view any leave requests', 'view leave requests',
+            'request leave', 'edit own leave request', 'delete leave request',
+            'approve leave',
 
-            // 🧾 أنواع الطلبات
-            'request leave',
+            // 🧾 طلبات البيان
+            'view statement requests',
+            'create statement request',
+            'approve statement request',
+            'reject statement request',
             'request statement',
 
-            // 🧑‍⚕️ تفاصيل الإجازة
-            'upload leave proof',
-
-            // 📚 الدورات التدريبية
-            'view courses',
-            'edit courses',
-            'create course',
-            'update course',
-            'request course',
+            // 📥 طلبات الدورات
+            'view course requests',
+            'create course request',
             'approve course request',
             'reject course request',
 
+            // 📚 إدارة الدورات التدريبية
+            'view courses',
+            'create course',
+            'update course',
+            'delete course',
+
+            // 🧾 إثبات الإجازة
+            'upload leave proof',
+
             // 🧍 التحديثات الشخصية
-            'update personal info',
-            'upload attachments',
+            'update personal info', 'update personal data',
+            'update employee data', 'upload attachments',
 
             // 📊 التقارير
-            'view reports',
-            'generate reports',
+            'view reports', 'generate reports',
 
             // 📅 الحضور والإجازات
-            'view attendance',
-            'edit attendance',
-            'approve leave',
+            'view attendance', 'edit attendance',
 
             // 📝 الاستبيانات
-            'create surveys',
-            'view surveys',
-            'submit survey',
-            'view survey results',
+            'create surveys', 'view surveys', 'submit survey', 'view survey results',
+
+            // 🧑‍🏫 الأسئلة والإجابات
+            'create survey questions', 'view survey questions', 'update survey questions', 'delete survey questions', // صلاحيات الأسئلة
+            'create survey answers', 'view survey answers', // صلاحيات الإجابات
 
             // 🏢 الأقسام (Departments)
-            'view departments',
-            'create departments',
-            'update departments',
-            'delete departments',
+            'view departments', 'create departments', 'update departments', 'delete departments',
 
             // ⚙️ إعدادات النظام
-            'manage roles',
-            'assign roles',
-            'view audit logs',
-
-            // ✅ الصلاحيات الجديدة:
-            // 1. **تعديل بيانات الموظف العامة** - يحق لـ Admin و HR
-            'update employee data',
-
-            // 2. **تعديل بيانات الموظف الشخصية** - يحق للموظف تعديل هذه البيانات فقط
-            'update personal data',
+            'manage roles', 'assign roles', 'view audit logs',
         ];
 
-        // إنشاء الصلاحيات إن لم تكن موجودة
+        // إضافة الصلاحيات إذا لم تكن موجودة
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // إنشاء الأدوار
+        // إضافة الأدوار
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $hrRole = Role::firstOrCreate(['name' => 'hr']);
         $managerRole = Role::firstOrCreate(['name' => 'manager']);
         $employeeRole = Role::firstOrCreate(['name' => 'employee']);
 
-        // ربط الأدوار بالصلاحيات
-
-        // منح جميع الصلاحيات لدور admin
+        // 🔐 admin: كل الصلاحيات
         $adminRole->givePermissionTo(Permission::all());
 
-        // منح صلاحيات لـ hr
+        // 🔐 HR
         $hrRole->givePermissionTo([
             'view users', 'edit users',
-            'view requests', 'approve requests', 'reject requests',
+            'view any leave requests', 'view leave requests',
+            'approve leave',
+
+            // طلبات البيان
+            'view statement requests',
+            'approve statement request',
+            'reject statement request',
+
+            // إدارة الدورات
+            'view courses',
+            'create course',
+            'update course',
+            'delete course',
+
+            // طلبات الدورات
+            'view course requests',
+            'approve course request',
+            'reject course request',
+
             'view reports', 'generate reports',
-            'view attendance', 'edit attendance', 'approve leave',
-            'view courses', 'approve course request', 'reject course request',
+            'view attendance', 'edit attendance',
             'create surveys', 'view surveys', 'view survey results',
             'view departments', 'create departments',
-            'update employee data',  // تعديل بيانات الموظف العامة
+            'update employee data',
+
+            // صلاحيات الأسئلة والإجابات
+            'create survey questions', 'view survey questions', 'update survey questions', 'delete survey questions', // الأسئلة
+            'create survey answers', 'view survey answers', // الإجابات
         ]);
 
-        // منح صلاحيات لـ manager
+        // 🔐 Manager
         $managerRole->givePermissionTo([
-            'view users', 'edit users',
-            'view requests', 'approve requests', 'reject requests',
+            'view users',
+            'view any leave requests', 'view leave requests',
+            'approve leave',
             'view reports', 'generate reports',
-            'view attendance', 'edit attendance', 'approve leave',
-            'view courses', 'approve course request', 'reject course request',
-            'create surveys', 'view surveys', 'view survey results',
+            'view attendance', 'edit attendance',
+            'view courses',
+            'approve course request',
+            'reject course request',
+            'view surveys', 'view survey results',
         ]);
 
-        // منح صلاحيات لـ employee
+        // 🔐 Employee
         $employeeRole->givePermissionTo([
-            'create requests', 'edit own requests', 'delete own requests', 'view requests',
-            'request leave', 'request statement', 'upload leave proof',
-            'view courses', 'request course',
-            'update personal data', // تعديل البيانات الشخصية
-            'update personal info', // التحديثات الشخصية
+            'request leave', 'edit own leave request', 'delete leave request',
+            'view leave requests',
+           
+            // طلبات البيان
+            'view statement requests',
+            'create statement request',
+
+            // طلبات الدورات
+            'view course requests',
+            'create course request',
+
+            'view courses',
+            'upload leave proof',
+            'update personal data',
+            'update personal info',
             'upload attachments',
-            'view surveys', 'submit survey',
+            'view surveys',
+            'submit survey',
+
+            // صلاحيات الإجابة على الأسئلة
+            'create survey answers', 'view survey answers',
         ]);
     }
 }

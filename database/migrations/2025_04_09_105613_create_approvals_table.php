@@ -8,6 +8,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('approvals', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->morphs('approvable');
             $table->foreignId('approved_by')->constrained('users')->onDelete('cascade');

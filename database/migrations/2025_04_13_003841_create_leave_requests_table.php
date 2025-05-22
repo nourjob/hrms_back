@@ -10,6 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('leave_requests', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();  // معرف الطلب
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');  // ربط الطلب بالمستخدم
             $table->enum('subtype', ['study', 'medical', 'administrative']);  // نوع الإجازة

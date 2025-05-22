@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -21,14 +20,9 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'job_number' => $this->job_number,
             'status' => $this->status,
-
-            // تأكد من عرض اسم القسم إذا كان موجودًا
-            'department' => $this->department ? $this->department->name : null,  // عرض اسم القسم فقط إذا كان موجودًا
-
-            // تأكد من عرض اسم المدير إذا كان موجودًا
-            'manager' => $this->manager ? $this->manager->name : null,  // إضافة هذا السطر
-            'role' => $this->getRoleNames(),  // إرجاع جميع الأدوار المخصصة لهذا المستخدم
-
+            'department' => $this->department ? $this->department->name : null,
+            'manager_id' => $this->manager ? $this->manager->name : null,
+            'roles' => $this->getRoleNames(),  // استخدم getRoleNames بدلاً من roles
             'marital_status' => $this->marital_status,
             'number_of_children' => $this->number_of_children,
             'qualification' => $this->qualification,

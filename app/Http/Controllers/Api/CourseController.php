@@ -21,11 +21,11 @@ class CourseController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index()
-    {
-        $courses = $this->courseService->getAllCourses();
-        return CourseResource::collection($courses);
-    }
+ public function index()
+{
+    $courses = $this->courseService->getAllCourses();
+    return CourseResource::collection($courses); // سيتم تحويل الكائنات إلى JSON بشكل صحيح
+}
 
         /**
      * إضافة دورة جديدة.

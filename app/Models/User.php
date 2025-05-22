@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Notifications\ResetPasswordNotification;
-use Spatie\Permission\Traits\HasRoles;  // استخدام HasRoles من Spatie
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'job_number',
         'status',
+        'role',
         'manager_id',
         'department_id',
         'marital_status',

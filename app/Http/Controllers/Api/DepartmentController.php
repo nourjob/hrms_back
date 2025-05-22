@@ -7,7 +7,10 @@ use App\Services\DepartmentService;
 use App\Http\Resources\DepartmentResource;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-
+use Spatie\Permission\Models\Role;
+use App\Models\User;
+use App\Http\Contrllers\UserController;
+use App\Http\Resources\UserResource;
 class DepartmentController extends Controller
 {
     protected $departmentService;
@@ -17,26 +20,36 @@ class DepartmentController extends Controller
         $this->departmentService = $departmentService;
     }
 
-    /**
-     * عرض قائمة الأقسام.
-     */
+    public function employees(Department $department)
+{
+    // 🔒 تحقق من صلاحيات المستخدم (admin أو hr)
+    if (!auth()->user()->hasAnyRole(['admin', 'hr'])) {
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }
+
+    // 🧑‍🤝‍🧑 جلب المستخدمين في هذا القسم
+    $employees = $department->users()->with('roles')->get();
+
+    return UserResource::collection($employees);
+}
+
+    
     public function index()
     {
-        $departments = Department::all();
+        $departments = Department::with('manager')->get(); // تأكد من تحميل العلاقة manager
+
         return DepartmentResource::collection($departments);
     }
 
-    /**
-     * عرض تفاصيل القسم.
-     */
+
+    
     public function show(Department $department)
     {
+        $this->authorize('view', $department);  // 🔒 Only admin or department's manager
         return new DepartmentResource($department);
     }
 
-    /**
-     * إنشاء قسم جديد.
-     */
+    
     public function store(Request $request)
     {
         $this->authorize('create', Department::class);
@@ -50,15 +63,12 @@ class DepartmentController extends Controller
         return new DepartmentResource($department);
     }
 
-    /**
-     * تحديث بيانات القسم.
-     */
     public function update(Request $request, Department $department)
     {
         $this->authorize('update', $department);
 
         $data = $request->validate([
-            'name' => 'sometimes|string',
+            'name' => 'nullable|string',
             'manager_id' => 'nullable|exists:users,id',
         ]);
 
@@ -66,9 +76,7 @@ class DepartmentController extends Controller
         return new DepartmentResource($updatedDepartment);
     }
 
-    /**
-     * حذف قسم.
-     */
+    
     public function destroy(Department $department)
     {
         $this->authorize('delete', $department);
@@ -76,4 +84,6 @@ class DepartmentController extends Controller
         $this->departmentService->deleteDepartment($department);
         return response()->json(null, 204);
     }
+ 
+
 }

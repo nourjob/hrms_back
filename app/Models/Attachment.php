@@ -10,6 +10,8 @@ class Attachment extends Model
         'file_path',
         'file_type',
         'uploaded_by',
+        'attachable_id',     // ✅ أضف هذا
+        'attachable_type',   // ✅ وأيضًا هذا
     ];
     const UPDATED_AT = null;
     public function attachable()

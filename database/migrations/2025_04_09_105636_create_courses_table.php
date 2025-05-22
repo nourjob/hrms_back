@@ -8,6 +8,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('courses', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->string('name');               // اسم الدورة
             $table->text('description')->nullable(); // وصف الدورة (يمكن أن يكون فارغًا)

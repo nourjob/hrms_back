@@ -1,6 +1,4 @@
 <?php
-// app/Http/Controllers/UserController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -8,6 +6,8 @@ use App\Services\UserService;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -18,18 +18,28 @@ class UserController extends Controller
         $this->userService = $userService;
     }
 
-    public function index()
-    {
-        // تحميل العلاقات department و manager مع جميع المستخدمين
-        $users = User::with(['department', 'manager'])->get();  // تحميل القسم والمدير
+public function index(Request $request)
+{
+    $authUser = auth()->user();
 
-        return UserResource::collection($users);  // تحويل البيانات إلى JSON باستخدام UserResource
-    }
+    $this->authorize('viewAny', User::class);
+
+    // عدد العناصر في الصفحة، يمكن تمريرها عبر query param ?per_page=10 مثلا
+    $perPage = $request->input('per_page', 15); // 15 هو الافتراضي
+
+    // استدعاء السيرفيس مع pagination
+    $users = $this->userService->getUsersVisibleToPaginated($authUser, $perPage);
+
+    // إرجاع كائن Resource مع pagination
+    return UserResource::collection($users);
+}
+
+
 
     public function show(User $user)
     {
-        // تحميل العلاقات department و manager مع المستخدم الفردي
-        $user->load(['department', 'manager']);  // تحميل القسم والمدير مع المستخدم
+        // تحميل العلاقات department و manager و roles مع المستخدم
+        $user->load(['department', 'manager', 'roles']);  // إضافة 'roles' هنا
 
         return new UserResource($user);  // تحويل بيانات المستخدم إلى JSON
     }
@@ -37,68 +47,104 @@ class UserController extends Controller
     /**
      * إنشاء مستخدم جديد.
      */
-    public function store(Request $request)
-    {
-        $this->authorize('create', User::class); // تحقق من صلاحية المستخدم
+ public function store(Request $request)
+{
+    $authUser = auth()->user();
 
-        $data = $request->validate([
-            'name' => 'required|string',
-            'username' => 'required|string|unique:users',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|string|min:8',
-            'role' => 'required|string|exists:roles,name',
-            'job_number' => 'required|string',
-            'department_id' => 'required|exists:departments,id',
-            // ✅ Add these optional fields:
-            'status' => 'nullable|string',
-            'marital_status' => 'nullable|string',
-            'number_of_children' => 'nullable|integer',
-            'qualification' => 'nullable|string',
-            'phone' => 'nullable|string',
-            'address' => 'nullable|string',
-            'university' => 'nullable|string',
-            'graduation_year' => 'nullable|string',
-        ]);
+    $this->authorize('create', User::class);
 
-        $user = $this->userService->createUser($data);  // إنشاء المستخدم باستخدام الخدمة
+    $data = $request->validate([
+        'name' => 'required|string',
+        'username' => 'required|string|unique:users',
+        'email' => 'required|email|unique:users',
+        'password' => 'required|string|min:8',
+        'role' => 'required|string|exists:roles,name',
+        'job_number' => 'required|string',
+        'department_id' => 'required|exists:departments,id',
+        'status' => 'nullable|string',
+        'marital_status' => 'nullable|string',
+        'number_of_children' => 'nullable|integer',
+        'qualification' => 'nullable|string',
+        'phone' => 'nullable|string',
+        'address' => 'nullable|string',
+        'university' => 'nullable|string',
+        'graduation_year' => 'nullable|string',
+    ]);
 
-        return new UserResource($user);  // إرجاع البيانات باستخدام UserResource
+    if ($authUser->hasRole('hr') && !in_array(strtolower($data['role']), ['manager', 'employee'])) {
+        abort(403, 'HR can only create users with role manager or employee.');
     }
+
+    $user = $this->userService->createUser($data, $authUser);
+
+    return new UserResource($user);
+}
 
     /**
      * تحديث بيانات المستخدم العامة.
      */
-    public function updateEmployeeData(Request $request, User $user)
-    {
-        $user = Auth::user();  // هذا هو المكان الذي نقوم فيه بتعيين المتغير `$user`
+   public function update(Request $request, User $user)
+{
+    $authUser = auth()->user();
 
-        $this->authorize('updateProfile', $user);  // تحقق من صلاحية الـ Admin أو HR لتحديث البيانات
+    $this->authorize('update', $user);
 
-        $data = $request->validate([
-            'name' => 'nullable|string',
-            'username' => 'nullable|string',
-            'email' => 'nullable|email|unique:users,email,' . $user->id,
-            'job_number' => 'nullable|string',
-            'department_id' => 'nullable|exists:departments,id',
-            'status' => 'nullable|string|in:active,suspended,resigned',
-            'role' => 'nullable|string|in:admin,hr,manager,employee', // لا بد من تحديد الأدوار المتاحة
-        ]);
+    $data = $request->validate([
+        'username' => 'required|string|unique:users,username,' . $user->id,
+        'password' => 'nullable|string|min:8',
+        'role' => 'required|string|exists:roles,name',
+        'name' => 'required|string',
+        'email' => 'required|email|unique:users,email,' . $user->id,
+        'job_number' => 'nullable|string|unique:users,job_number,' . $user->id,
+        'department_id' => 'nullable|exists:departments,id',
+        'status' => 'nullable|string|in:active,suspended,resigned',
+        'marital_status' => 'nullable|string',
+        'number_of_children' => 'nullable|integer',
+        'qualification' => 'nullable|string',
+        'phone' => 'nullable|string',
+        'address' => 'nullable|string',
+        'university' => 'nullable|string',
+        'graduation_year' => 'nullable|string',
+    ]);
 
-        $updatedUser = $this->userService->updateEmployeeData($user, $data);  // تحديث البيانات العامة للمستخدم
-
-        return new UserResource($updatedUser);  // إرجاع البيانات باستخدام UserResource
+    if (!empty($data['password'])) {
+        $data['password'] = Hash::make($data['password']);
+    } else {
+        unset($data['password']);
     }
+
+    $updatedUser = $this->userService->updateEmployeeData($user, $data, $authUser);
+
+    return new UserResource($updatedUser);
+}
+
+    public function me(Request $request)
+    {
+        $user = $request->user();
+
+        // تحميل العلاقات المهمة
+        $user->load(['department', 'manager', 'roles']);
+
+        return new UserResource($user);
+    }
+
 
     /**
      * تعديل البيانات الشخصية (يحق فقط للموظف).
      */
     public function updatePersonalData(Request $request)
     {
-        $user = Auth::user();  // هذا هو المكان الذي نقوم فيه بتعيين المتغير `$user`
+        $user = Auth::user();
 
-        $this->authorize('updateProfile', $user);  // استخدم الـ Policy للتحقق إذا كان لدى المستخدم صلاحية تعديل بياناته
+        // ✅ التحقق من أن المستخدم هو الموظف فقط
+        if (! $user->hasRole('employee')) {
+            abort(403, 'Only employees can update their personal data.');
+        }
 
-        // التحقق من الحقول التي يحق للموظف تعديلها فقط
+        // ✅ التحقق من إمكانية تحديث المستخدم لملفه الشخصي
+        $this->authorize('updateProfile', $user);
+
+        // ✅ التحقق من صحة البيانات الشخصية
         $data = $request->validate([
             'marital_status' => 'nullable|string',
             'number_of_children' => 'nullable|integer',
@@ -109,11 +155,11 @@ class UserController extends Controller
             'graduation_year' => 'nullable|string',
         ]);
 
-        // تحديث بيانات الموظف
+        // ✅ تحديث البيانات الشخصية
         $user->update($data);
 
         // إرسال إشعار للـ HR والمدير بأن الموظف قام بتحديث بياناته
-        $this->sendUpdateNotification($user);
+        //$this->sendUpdateNotification($user);
 
         return response()->json([
             'message' => 'Your personal data has been updated successfully.',
@@ -126,8 +172,8 @@ class UserController extends Controller
      */
     private function sendUpdateNotification($user)
     {
-        $managers = User::where('role', 'manager')->get();
-        $hr = User::where('role', 'hr')->get();
+        $managers = User::role('manager')->get();
+        $hr = User::role('hr')->get();
 
         $notificationData = [
             'title' => 'Profile Updated',
@@ -147,12 +193,33 @@ class UserController extends Controller
     /**
      * حذف المستخدم.
      */
-    public function destroy(User $user)
+public function destroy(User $user)
+{
+    $authUser = auth()->user();
+
+    $this->authorize('delete', $user);
+
+    $this->userService->deleteUser($user, $authUser);
+
+    return response()->json(null, 204);
+}
+
+
+    /**
+     * عرض قائمة المستخدمين الذين لديهم دور "manager".
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getManagers()
     {
-        $this->authorize('delete', $user);  // تحقق من صلاحية المستخدم
-
-        $this->userService->deleteUser($user);  // حذف المستخدم باستخدام الخدمة
-
-        return response()->json(null, 204);  // إرجاع استجابة فارغة
+        $managers = $this->userService->getManagers();
+        return response()->json($managers);
     }
 }
+
+
+
+
+
+
+

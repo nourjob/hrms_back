@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Policies;
 
 use App\Models\User;
@@ -7,85 +6,100 @@ use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
-
+    /**
+     * يسمح فقط لـ Admin و HR و الموظف نفسه بتعديل بياناته الشخصية
+     */
     public function updateProfile(User $user, User $model): bool
     {
-        // يسمح فقط لـ Admin و HR و الموظف نفسه بتعديل بياناته الشخصية
         return $user->hasRole('admin') || $user->hasRole('hr') || $user->id === $model->id;
     }
 
-
     /**
-     * تحديد ما إذا كان المستخدم يمكنه عرض أي من النماذج.
+     * يسمح للمستخدم الـ admin و الـ hr و الـ manager برؤية المستخدمين.
+     * الماناجر يستطيع رؤية المستخدمين من نفس القسم فقط.
      */
     public function viewAny(User $user): bool
     {
-        // مدير الموارد (hr) يمكنه رؤية جميع المستخدمين
-        // الماناجر يمكنه فقط رؤية المستخدمين الذين ينتمون إلى قسمه
-        if ($user->hasRole('admin') || $user->hasRole('hr')) {
-            return true; // يسمح لجميع مستخدمي الـ admin و hr
-        }
-
-        if ($user->hasRole('manager')) {
-            // الماناجر يستطيع رؤية المستخدمين من نفس القسم فقط
-            return $user->department_id == request()->route('department_id');
-        }
-
-        return false; // إذا لم يكن لديه صلاحية
+        return $user->hasRole('admin') || $user->hasRole('hr') || $user->hasRole('manager');
     }
-    public function assignRole(User $user): bool
-{
-    // فقط admin يمكنه تعيين الأدوار
-    return $user->hasRole('admin');
-}
-
 
     /**
-     * تحديد ما إذا كان المستخدم يمكنه عرض النموذج.
+     * السماح فقط للـ admin، الموظف نفسه، أو الماناجر بنفس القسم.
      */
     public function view(User $user, User $model): bool
     {
-        // يمكن للمستخدم admin أو نفسه رؤية الحساب
-        return $user->hasRole('admin') || $user->id === $model->id || $user->hasRole('manager') && $user->department_id === $model->department_id;
+        return $user->hasRole('admin')
+            || $user->id === $model->id
+            || ($user->hasRole('manager') && $user->department_id === $model->department_id);
     }
 
     /**
-     * تحديد ما إذا كان المستخدم يمكنه إنشاء النماذج.
+     * السماح للـ admin بإنشاء أي مستخدم، والـ hr بإنشاء مستخدم بشرط ألا يكون دوره admin.
      */
-    public function create(User $user): bool
+     /**
+     * السماح بإنشاء مستخدم جديد.
+     * admin كامل الصلاحية.
+     * hr يمكنه إنشاء فقط مستخدمين أقل منه (manager, employee).
+     */
+    public function create(User $authUser): bool
     {
-        return $user->hasRole('admin'); // فقط الـ admin يمكنه إنشاء المستخدمين
+        return $authUser->hasRole('admin') || $authUser->hasRole('hr');
     }
 
     /**
-     * تحديد ما إذا كان المستخدم يمكنه تحديث النموذج.
+     * السماح بالتعديل على المستخدم.
+     * admin كامل الصلاحية.
+     * hr لا يعدل admin أو hr.
+     * manager يعدل موظفين قسمه فقط.
+     * الموظف يعدل بياناته فقط.
      */
-    public function update(User $user, User $model): bool
+    public function update(User $authUser, User $user): bool
     {
-        return $user->hasRole('admin') || $user->id === $model->id;
+        if ($authUser->hasRole('admin')) {
+            return true;
+        }
+
+        if ($authUser->id === $user->id) {
+            return true;
+        }
+
+        if ($authUser->hasRole('hr')) {
+            return ! $user->hasRole('admin') && ! $user->hasRole('hr');
+        }
+
+        if ($authUser->hasRole('manager')) {
+            return $authUser->department_id === $user->department_id
+                && ! $user->hasRole('admin')
+                && ! $user->hasRole('hr')
+                && ! $user->hasRole('manager');
+        }
+
+        return false;
     }
 
     /**
-     * تحديد ما إذا كان المستخدم يمكنه حذف النموذج.
+     * السماح بحذف المستخدم.
+     * admin كامل الصلاحية.
+     * hr يحذف فقط المستخدمين الأقل منه.
+     * manager يحذف موظفي قسمه فقط ومن أدوار أقل.
      */
-    public function delete(User $user, User $model): bool
+    public function delete(User $authUser, User $user): bool
     {
-        return $user->hasRole('admin') ;
-    }
+        if ($authUser->hasRole('admin')) {
+            return true;
+        }
 
-    /**
-     * تحديد ما إذا كان المستخدم يمكنه استعادة النموذج.
-     */
-    public function restore(User $user, User $model): bool
-    {
-        return $user->hasRole('admin');
-    }
+        if ($authUser->hasRole('hr')) {
+            return ! $user->hasRole('admin') && ! $user->hasRole('hr');
+        }
 
-    /**
-     * تحديد ما إذا كان المستخدم يمكنه حذف النموذج بشكل دائم.
-     */
-    public function forceDelete(User $user, User $model): bool
-    {
-        return $user->hasRole('admin');
+        if ($authUser->hasRole('manager')) {
+            return $authUser->department_id === $user->department_id
+                && ! $user->hasRole('admin')
+                && ! $user->hasRole('hr')
+                && ! $user->hasRole('manager');
+        }
+
+        return false;
     }
-}
+} 
