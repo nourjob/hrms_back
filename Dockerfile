@@ -1,35 +1,35 @@
 FROM php:8.2-fpm
 
-# تثبيت الاعتمادات الأساسية
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpng-dev \
+# إعداد التحديث وتثبيت الحزم الأساسية
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     libonig-dev \
-    libxml2-dev \
+    libzip-dev \
     zip \
     unzip \
     curl \
     git \
-    libzip-dev \
-    mysql-client
+    libxml2-dev \
+    default-mysql-client && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# تثبيت ملحقات PHP المطلوبة للـ Laravel
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+# تثبيت امتدادات PHP المطلوبة
+RUN docker-php-ext-install mbstring zip pdo_mysql bcmath exif pcntl
 
 # تثبيت Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# إعداد مجلد العمل
+# مجلد العمل
 WORKDIR /var/www
 
-# نسخ ملفات المشروع
+# نسخ ملفات Laravel
 COPY . .
 
-# تثبيت الحزم عبر Composer
+# تثبيت الاعتمادات
 RUN composer install --no-dev --optimize-autoloader
 
-# صلاحيات الملفات
+# صلاحيات
 RUN chown -R www-data:www-data /var/www
 
-# أمر التشغيل
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=10000
+# بدء Laravel: تنظيف الكاش وتشغيل التهجير والسيرفر
+CMD php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=10000
