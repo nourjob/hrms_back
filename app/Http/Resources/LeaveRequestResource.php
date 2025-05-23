@@ -33,7 +33,7 @@ class LeaveRequestResource extends JsonResource
             }),
 
             // معلومات المراجعة
-            'has_approved' => $this->approvals->contains('approved_by', $currentUser->id),
+'has_approved' => $this->relationLoaded('approvals') ? $this->approvals->contains('approved_by', $currentUser->id) : false,
             'can_approve' => $currentUser->can('approve', $this->resource),
 
             // تواريخ
