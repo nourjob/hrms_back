@@ -21,7 +21,7 @@ class RequestController extends Controller
         $date = $request->input('date');
 
         // الاستعلامات الأساسية
-        $leaveRequestsQuery = LeaveRequest::with(['user', 'attachments']);
+$leaveRequestsQuery = LeaveRequest::with(['user', 'attachments', 'approvals']);
         $statementRequestsQuery = StatementRequest::with(['user', 'attachments']);
         $courseRequestsQuery = CourseRequest::with(['user', 'attachments', 'course']);
 
