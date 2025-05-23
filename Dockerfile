@@ -31,5 +31,5 @@ RUN composer install --no-dev --optimize-autoloader
 # صلاحيات
 RUN chown -R www-data:www-data /var/www
 
-# بدء Laravel: تنظيف الكاش وتشغيل التهجير والسيرفر
-CMD php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=10000
+# بدء Laravel: تنظيف الكاش، التهجير، تشغيل Seeder، وتشغيل السيرفر
+CMD php artisan config:clear && php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=10000
