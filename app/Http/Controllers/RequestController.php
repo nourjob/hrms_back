@@ -14,38 +14,52 @@ class RequestController extends Controller
 {
     public function getAllFilteredRequests(Request $request)
     {
-        $type = $request->input('type');
-        $status = $request->input('status');
-        $date = $request->input('date');
+        // علاقات مشتركة
+        $leaveRequestsQuery = LeaveRequest::with(['user', 'attachments', 'approvals']);
+        $statementRequestsQuery = StatementRequest::with(['user', 'attachments']);
+        $courseRequestsQuery = CourseRequest::with(['user', 'attachments', 'course']);
 
-        // استعلامات جاهزة
-        $leaveRequests = collect();
-        $statementRequests = collect();
-        $courseRequests = collect();
-
-        // استعلامات عند الطلب فقط
-        if (!$type || $type === 'leave') {
-            $query = LeaveRequest::with(['user', 'attachments', 'approvals']);
-            if ($status) $query->where('status', $status);
-            if ($date) $query->whereDate('created_at', $date);
-            $leaveRequests = $query->get();
+        // الفلترة حسب النوع (يُخفي الباقي)
+        if ($request->has('type')) {
+            $type = $request->type;
+            if ($type === 'leave') {
+                $statementRequestsQuery = collect();
+                $courseRequestsQuery = collect();
+            } elseif ($type === 'statement') {
+                $leaveRequestsQuery = collect();
+                $courseRequestsQuery = collect();
+            } elseif ($type === 'course') {
+                $leaveRequestsQuery = collect();
+                $statementRequestsQuery = collect();
+            }
         }
 
-        if (!$type || $type === 'statement') {
-            $query = StatementRequest::with(['user', 'attachments']);
-            if ($status) $query->where('status', $status);
-            if ($date) $query->whereDate('created_at', $date);
-            $statementRequests = $query->get();
+        // فلترة الحالة
+        if ($request->has('status')) {
+            $leaveRequestsQuery = is_a($leaveRequestsQuery, 'Illuminate\\Database\\Eloquent\\Builder')
+                ? $leaveRequestsQuery->where('status', $request->status) : $leaveRequestsQuery;
+            $statementRequestsQuery = is_a($statementRequestsQuery, 'Illuminate\\Database\\Eloquent\\Builder')
+                ? $statementRequestsQuery->where('status', $request->status) : $statementRequestsQuery;
+            $courseRequestsQuery = is_a($courseRequestsQuery, 'Illuminate\\Database\\Eloquent\\Builder')
+                ? $courseRequestsQuery->where('status', $request->status) : $courseRequestsQuery;
         }
 
-        if (!$type || $type === 'course') {
-            $query = CourseRequest::with(['user', 'attachments', 'course']);
-            if ($status) $query->where('status', $status);
-            if ($date) $query->whereDate('created_at', $date);
-            $courseRequests = $query->get();
+        // فلترة التاريخ
+        if ($request->has('date')) {
+            $leaveRequestsQuery = is_a($leaveRequestsQuery, 'Illuminate\\Database\\Eloquent\\Builder')
+                ? $leaveRequestsQuery->whereDate('created_at', $request->date) : $leaveRequestsQuery;
+            $statementRequestsQuery = is_a($statementRequestsQuery, 'Illuminate\\Database\\Eloquent\\Builder')
+                ? $statementRequestsQuery->whereDate('created_at', $request->date) : $statementRequestsQuery;
+            $courseRequestsQuery = is_a($courseRequestsQuery, 'Illuminate\\Database\\Eloquent\\Builder')
+                ? $courseRequestsQuery->whereDate('created_at', $request->date) : $courseRequestsQuery;
         }
 
-        // الإرجاع النهائي
+        // تحميل النتائج
+        $leaveRequests = is_a($leaveRequestsQuery, 'Illuminate\\Database\\Eloquent\\Builder') ? $leaveRequestsQuery->get() : collect();
+        $statementRequests = is_a($statementRequestsQuery, 'Illuminate\\Database\\Eloquent\\Builder') ? $statementRequestsQuery->get() : collect();
+        $courseRequests = is_a($courseRequestsQuery, 'Illuminate\\Database\\Eloquent\\Builder') ? $courseRequestsQuery->get() : collect();
+
+        // الموارد النهائية (Resources)
         return response()->json([
             'leaveRequests' => LeaveRequestResource::collection($leaveRequests),
             'statementRequests' => StatementRequestResource::collection($statementRequests),
