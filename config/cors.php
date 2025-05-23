@@ -7,7 +7,7 @@ return [
 
     'allowed_methods' => ['*'], // السماح بكل طرق HTTP (GET, POST, PUT, DELETE...)
 
-    'allowed_origins' => ['http://localhost:3000', 'http://127.0.0.1:3000'],  // السماح بالاتصال من هذا العنوان
+'allowed_origins' => ['*'],
     // السماح باستخدام الكوكيز مع Sanctum
 
     'allowed_origins_patterns' => [],
