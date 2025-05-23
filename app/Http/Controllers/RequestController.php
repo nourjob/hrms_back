@@ -9,67 +9,43 @@ use App\Models\CourseRequest;
 use App\Http\Resources\LeaveRequestResource;
 use App\Http\Resources\StatementRequestResource;
 use App\Http\Resources\CourseRequestResource;
-use Illuminate\Database\Eloquent\Builder;
 
 class RequestController extends Controller
 {
     public function getAllFilteredRequests(Request $request)
     {
-        $userName = $request->input('user_name');
         $type = $request->input('type');
         $status = $request->input('status');
         $date = $request->input('date');
 
-        // الاستعلامات الأساسية
-$leaveRequestsQuery = LeaveRequest::with(['user', 'attachments', 'approvals']);
-        $statementRequestsQuery = StatementRequest::with(['user', 'attachments']);
-        $courseRequestsQuery = CourseRequest::with(['user', 'attachments', 'course']);
+        // استعلامات جاهزة
+        $leaveRequests = collect();
+        $statementRequests = collect();
+        $courseRequests = collect();
 
-        // فلترة النوع - إذا تم تحديد النوع، نجعل الباقي Collections فارغة
-        if ($type === 'leave') {
-            $statementRequestsQuery = collect();
-            $courseRequestsQuery = collect();
-        } elseif ($type === 'statement') {
-            $leaveRequestsQuery = collect();
-            $courseRequestsQuery = collect();
-        } elseif ($type === 'course') {
-            $leaveRequestsQuery = collect();
-            $statementRequestsQuery = collect();
+        // استعلامات عند الطلب فقط
+        if (!$type || $type === 'leave') {
+            $query = LeaveRequest::with(['user', 'attachments', 'approvals']);
+            if ($status) $query->where('status', $status);
+            if ($date) $query->whereDate('created_at', $date);
+            $leaveRequests = $query->get();
         }
 
-        // فلترة الحالة
-        if ($status) {
-            if ($leaveRequestsQuery instanceof Builder) {
-                $leaveRequestsQuery->where('status', $status);
-            }
-            if ($statementRequestsQuery instanceof Builder) {
-                $statementRequestsQuery->where('status', $status);
-            }
-            if ($courseRequestsQuery instanceof Builder) {
-                $courseRequestsQuery->where('status', $status);
-            }
+        if (!$type || $type === 'statement') {
+            $query = StatementRequest::with(['user', 'attachments']);
+            if ($status) $query->where('status', $status);
+            if ($date) $query->whereDate('created_at', $date);
+            $statementRequests = $query->get();
         }
 
-        // فلترة التاريخ
-        if ($date) {
-            if ($leaveRequestsQuery instanceof Builder) {
-                $leaveRequestsQuery->whereDate('created_at', $date);
-            }
-            if ($statementRequestsQuery instanceof Builder) {
-                $statementRequestsQuery->whereDate('created_at', $date);
-            }
-            if ($courseRequestsQuery instanceof Builder) {
-                $courseRequestsQuery->whereDate('created_at', $date);
-            }
+        if (!$type || $type === 'course') {
+            $query = CourseRequest::with(['user', 'attachments', 'course']);
+            if ($status) $query->where('status', $status);
+            if ($date) $query->whereDate('created_at', $date);
+            $courseRequests = $query->get();
         }
 
-
-        // تنفيذ الاستعلام أو إرجاع الـ Collection مباشرة
-        $leaveRequests = $leaveRequestsQuery instanceof Builder ? $leaveRequestsQuery->get() : $leaveRequestsQuery;
-        $statementRequests = $statementRequestsQuery instanceof Builder ? $statementRequestsQuery->get() : $statementRequestsQuery;
-        $courseRequests = $courseRequestsQuery instanceof Builder ? $courseRequestsQuery->get() : $courseRequestsQuery;
-
-        // التجاوب النهائي
+        // الإرجاع النهائي
         return response()->json([
             'leaveRequests' => LeaveRequestResource::collection($leaveRequests),
             'statementRequests' => StatementRequestResource::collection($statementRequests),
