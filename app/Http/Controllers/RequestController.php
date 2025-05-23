@@ -63,18 +63,6 @@ $leaveRequestsQuery = LeaveRequest::with(['user', 'attachments', 'approvals']);
             }
         }
 
-        // فلترة باسم المستخدم
-        if ($userName) {
-            if ($leaveRequestsQuery instanceof Builder) {
-                $leaveRequestsQuery->whereHas('user', fn($q) => $q->where('name', 'like', "%$userName%"));
-            }
-            if ($statementRequestsQuery instanceof Builder) {
-                $statementRequestsQuery->whereHas('user', fn($q) => $q->where('name', 'like', "%$userName%"));
-            }
-            if ($courseRequestsQuery instanceof Builder) {
-                $courseRequestsQuery->whereHas('user', fn($q) => $q->where('name', 'like', "%$userName%"));
-            }
-        }
 
         // تنفيذ الاستعلام أو إرجاع الـ Collection مباشرة
         $leaveRequests = $leaveRequestsQuery instanceof Builder ? $leaveRequestsQuery->get() : $leaveRequestsQuery;
